@@ -1,9 +1,10 @@
+import Bullet from "./entities/bullet"
 import Vector2 from "./Vector2"
+import Config from "./Config"
 
-const characterSize = 32
-const characterSpeed = 100
 const pressedInput: Record<string, boolean> = {}
 const target: Vector2 = new Vector2()
+const bullets: Array<Bullet> = []
 let canvas: HTMLCanvasElement = null
 let ctx: CanvasRenderingContext2D = null
 let tPrev: number = 0
@@ -26,23 +27,25 @@ const create = () => {
     window.addEventListener("resize", handleResize)
     window.addEventListener("keydown", handleKeyDown)
     window.addEventListener("keyup", handleKeyUp)
+    window.addEventListener("mousedown", handleMouseDown)
+    window.addEventListener("mouseup", handleMouseUp)
     window.addEventListener("mousemove", handleMouseMove)
 
     tPrev = Date.now()
 }
 
 const createCharacterTexture = () => {
-    const characterSizeHalf = characterSize * 0.5
+    const characterSizeHalf = Config.characterSize * 0.5
     characterTexture = document.createElement("canvas")
-    characterTexture.width = characterSize
-    characterTexture.height = characterSize
+    characterTexture.width = Config.characterSize
+    characterTexture.height = Config.characterSize
     const characterTextureCtx = characterTexture.getContext("2d")
 
     characterTextureCtx.fillStyle = "#000"
     characterTextureCtx.beginPath()
     characterTextureCtx.moveTo(characterSizeHalf, 0)
-    characterTextureCtx.lineTo(0, characterSize)
-    characterTextureCtx.lineTo(characterSize, characterSize)
+    characterTextureCtx.lineTo(0, Config.characterSize)
+    characterTextureCtx.lineTo(Config.characterSize, Config.characterSize)
     characterTextureCtx.closePath()
     characterTextureCtx.fill()
 }
@@ -67,9 +70,20 @@ const handleKeyUp = (event: KeyboardEvent) => {
     pressedInput[event.code] = false
 }
 
+const handleMouseDown = (event: MouseEvent) => {
+    console.log(event.button)
+}
+
+const handleMouseUp = (event: MouseEvent) => {}
+
 const handleMouseMove = (event: MouseEvent) => {
     target.x = event.clientX
     target.y = event.clientY
+}
+
+const spawnBullet = (x: number, y: number) => {
+    const bullet = new Bullet(x, y, 1, 0)
+    bullets.push(bullet)
 }
 
 const update = () => {
@@ -77,17 +91,17 @@ const update = () => {
     const tDeltaF = (tNow - tPrev) / 1000
 
     if (pressedInput["ArrowLeft"] || pressedInput["KeyA"]) {
-        player.speed.x = -characterSpeed
+        player.speed.x = -Config.characterSpeed
     } else if (pressedInput["ArrowRight"] || pressedInput["KeyD"]) {
-        player.speed.x = characterSpeed
+        player.speed.x = Config.characterSpeed
     } else {
         player.speed.x = 0
     }
 
     if (pressedInput["ArrowUp"] || pressedInput["KeyW"]) {
-        player.speed.y = -characterSpeed
+        player.speed.y = -Config.characterSpeed
     } else if (pressedInput["ArrowDown"] || pressedInput["KeyS"]) {
-        player.speed.y = characterSpeed
+        player.speed.y = Config.characterSpeed
     } else {
         player.speed.y = 0
     }
@@ -99,6 +113,12 @@ const update = () => {
     const diffY = target.y - player.position.y
     player.rotation = Math.atan2(diffX, diffY) + Math.PI
 
+    for (let n = 0; n < bullets.length; ++n) {
+        const bullet = bullets[n]
+        bullet.position.x += bullet.speed.x * tDeltaF
+        bullet.position.y += bullet.speed.y * tDeltaF
+    }
+
     tPrev = tNow
 }
 
@@ -109,6 +129,9 @@ const render = () => {
     ctx.fillRect(0, 0, canvas.width, canvas.height)
 
     renderCharacter(player)
+    for (let n = 0; n < bullets.length; ++n) {
+        renderBullet(bullets[n])
+    }
 
     requestAnimationFrame(render)
 }
@@ -117,7 +140,24 @@ const renderCharacter = (character: Character) => {
     ctx.save()
     ctx.setTransform(1, 0, 0, 1, character.position.x, character.position.y)
     ctx.rotate(character.rotation)
-    ctx.drawImage(characterTexture, -characterSize * 0.5, -characterSize * 0.5)
+    ctx.drawImage(
+        characterTexture,
+        -Config.characterSize * 0.5,
+        -Config.characterSize * 0.5
+    )
+    ctx.restore()
+}
+
+const renderBullet = (bullet: Bullet) => {
+    const bulletHalfSize = Config.bulletSize * 0.5
+    ctx.save()
+    ctx.fillStyle = "#ff0000"
+    ctx.fillRect(
+        bullet.position.x - bulletHalfSize,
+        bullet.position.y - bulletHalfSize,
+        Config.bulletSize,
+        Config.bulletSize
+    )
     ctx.restore()
 }
 
