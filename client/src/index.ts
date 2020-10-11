@@ -1,24 +1,19 @@
+import Vector2 from "./Vector2"
+
 const characterSize = 32
 const characterSpeed = 100
 const pressedInput: Record<string, boolean> = {}
+const target: Vector2 = new Vector2()
 let canvas: HTMLCanvasElement = null
 let ctx: CanvasRenderingContext2D = null
 let tPrev: number = 0
 let player: Character = null
-
-class Vector2 {
-    x: number = 0
-    y: number = 0
-
-    set(x: number, y: number) {
-        this.x = x
-        this.y = y
-    }
-}
+let characterTexture: HTMLCanvasElement = null
 
 class Character {
     position = new Vector2()
     speed = new Vector2()
+    rotation = 0
 }
 
 const create = () => {
@@ -31,11 +26,30 @@ const create = () => {
     window.addEventListener("resize", handleResize)
     window.addEventListener("keydown", handleKeyDown)
     window.addEventListener("keyup", handleKeyUp)
+    window.addEventListener("mousemove", handleMouseMove)
 
     tPrev = Date.now()
 }
 
+const createCharacterTexture = () => {
+    const characterSizeHalf = characterSize * 0.5
+    characterTexture = document.createElement("canvas")
+    characterTexture.width = characterSize
+    characterTexture.height = characterSize
+    const characterTextureCtx = characterTexture.getContext("2d")
+
+    characterTextureCtx.fillStyle = "#000"
+    characterTextureCtx.beginPath()
+    characterTextureCtx.moveTo(characterSizeHalf, 0)
+    characterTextureCtx.lineTo(0, characterSize)
+    characterTextureCtx.lineTo(characterSize, characterSize)
+    characterTextureCtx.closePath()
+    characterTextureCtx.fill()
+}
+
 const setup = () => {
+    createCharacterTexture()
+
     player = new Character()
     player.position.set(100, 100)
 }
@@ -51,6 +65,11 @@ const handleKeyDown = (event: KeyboardEvent) => {
 
 const handleKeyUp = (event: KeyboardEvent) => {
     pressedInput[event.code] = false
+}
+
+const handleMouseMove = (event: MouseEvent) => {
+    target.x = event.clientX
+    target.y = event.clientY
 }
 
 const update = () => {
@@ -76,6 +95,10 @@ const update = () => {
     player.position.x += player.speed.x * tDeltaF
     player.position.y += player.speed.y * tDeltaF
 
+    const diffX = player.position.x - target.x
+    const diffY = target.y - player.position.y
+    player.rotation = Math.atan2(diffX, diffY) + Math.PI
+
     tPrev = tNow
 }
 
@@ -91,13 +114,11 @@ const render = () => {
 }
 
 const renderCharacter = (character: Character) => {
-    ctx.fillStyle = "red"
-    ctx.fillRect(
-        character.position.x,
-        character.position.y,
-        characterSize,
-        characterSize
-    )
+    ctx.save()
+    ctx.setTransform(1, 0, 0, 1, character.position.x, character.position.y)
+    ctx.rotate(character.rotation)
+    ctx.drawImage(characterTexture, -characterSize * 0.5, -characterSize * 0.5)
+    ctx.restore()
 }
 
 create()
