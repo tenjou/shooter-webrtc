@@ -8,7 +8,9 @@ const bullets: Array<Bullet> = []
 let canvas: HTMLCanvasElement = null
 let ctx: CanvasRenderingContext2D = null
 let tPrev: number = 0
+let tPlayerShot: number = 0
 let player: Character = null
+let isPlayerShooting: boolean = false
 let characterTexture: HTMLCanvasElement = null
 
 class Character {
@@ -71,10 +73,16 @@ const handleKeyUp = (event: KeyboardEvent) => {
 }
 
 const handleMouseDown = (event: MouseEvent) => {
-    console.log(event.button)
+    if (event.button === 0) {
+        isPlayerShooting = true
+    }
 }
 
-const handleMouseUp = (event: MouseEvent) => {}
+const handleMouseUp = (event: MouseEvent) => {
+    if (event.button === 0) {
+        isPlayerShooting = false
+    }
+}
 
 const handleMouseMove = (event: MouseEvent) => {
     target.x = event.clientX
@@ -112,6 +120,13 @@ const update = () => {
     const diffX = player.position.x - target.x
     const diffY = target.y - player.position.y
     player.rotation = Math.atan2(diffX, diffY) + Math.PI
+
+    if (isPlayerShooting) {
+        if (tNow - tPlayerShot > Config.bulletSpawnRate) {
+            spawnBullet(player.position.x, player.position.y)
+            tPlayerShot = tNow
+        }
+    }
 
     for (let n = 0; n < bullets.length; ++n) {
         const bullet = bullets[n]
