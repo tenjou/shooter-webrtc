@@ -1,0 +1,19 @@
+{
+  "name": "shooter",
+  "version": "1.0.0",
+  "description": "JavaScript top-down multiplayer (WebRTC) shooter game.",
+  "scripts": {
+    "start:dev": "webpack-dev-server"
+  },
+  "keywords": ["javascript", "webrtc", "multiplayer", "game", "2d"],
+  "author": "Arturs Šefers",
+  "license": "MIT",
+  "devDependencies": {
+    "raw-loader": "^4.0.1",
+    "ts-loader": "^8.0.4",
+    "typescript": "^4.0.3",
+    "webpack": "^4.44.2",
+    "webpack-cli": "^3.3.12",
+    "webpack-dev-server": "^3.11.0"
+  }
+}
