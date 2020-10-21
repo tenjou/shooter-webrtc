@@ -1,10 +1,11 @@
-import Bullet from "./entities/bullet"
-import Vector2 from "./Vector2"
+import Bullet from "./entities/Bullet"
+import Character from "./entities/Character"
+import Vector2 from "./math/Vector2"
+import * as BulletSystem from "./BulletSystem"
 import Config from "./Config"
 
 const pressedInput: Record<string, boolean> = {}
 const target: Vector2 = new Vector2()
-const bullets: Array<Bullet> = []
 let canvas: HTMLCanvasElement = null
 let ctx: CanvasRenderingContext2D = null
 let tPrev: number = 0
@@ -12,12 +13,6 @@ let tPlayerShot: number = 0
 let player: Character = null
 let isPlayerShooting: boolean = false
 let characterTexture: HTMLCanvasElement = null
-
-class Character {
-    position = new Vector2()
-    speed = new Vector2()
-    rotation = 0
-}
 
 const create = () => {
     canvas = document.createElement("canvas")
@@ -89,15 +84,6 @@ const handleMouseMove = (event: MouseEvent) => {
     target.y = event.clientY
 }
 
-const spawnBullet = (character: Character) => {
-    const bullet = new Bullet(
-        character.position.x,
-        character.position.y,
-        character.rotation
-    )
-    bullets.push(bullet)
-}
-
 const update = () => {
     const tNow = Date.now()
     const tDeltaF = (tNow - tPrev) / 1000
@@ -127,19 +113,12 @@ const update = () => {
 
     if (isPlayerShooting) {
         if (tNow - tPlayerShot > Config.bulletSpawnRate) {
-            spawnBullet(player)
+            BulletSystem.spawnBullet(player)
             tPlayerShot = tNow
         }
     }
 
-    for (let n = 0; n < bullets.length; ++n) {
-        const bullet = bullets[n]
-        bullet.position.x += bullet.speed.x * tDeltaF
-        bullet.position.y += bullet.speed.y * tDeltaF
-        if (tNow > bullet.tDeath) {
-            // console.log("dead")
-        }
-    }
+    BulletSystem.update(tDeltaF)
 
     tPrev = tNow
 }
@@ -151,9 +130,7 @@ const render = () => {
     ctx.fillRect(0, 0, canvas.width, canvas.height)
 
     renderCharacter(player)
-    for (let n = 0; n < bullets.length; ++n) {
-        renderBullet(bullets[n])
-    }
+    BulletSystem.render(ctx)
 
     requestAnimationFrame(render)
 }
@@ -166,19 +143,6 @@ const renderCharacter = (character: Character) => {
         characterTexture,
         -Config.characterSize * 0.5,
         -Config.characterSize * 0.5
-    )
-    ctx.restore()
-}
-
-const renderBullet = (bullet: Bullet) => {
-    const bulletHalfSize = Config.bulletSize * 0.5
-    ctx.save()
-    ctx.fillStyle = "#ff0000"
-    ctx.fillRect(
-        bullet.position.x - bulletHalfSize,
-        bullet.position.y - bulletHalfSize,
-        Config.bulletSize,
-        Config.bulletSize
     )
     ctx.restore()
 }
