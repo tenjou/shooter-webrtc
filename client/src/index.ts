@@ -89,8 +89,12 @@ const handleMouseMove = (event: MouseEvent) => {
     target.y = event.clientY
 }
 
-const spawnBullet = (x: number, y: number) => {
-    const bullet = new Bullet(x, y, 1, 0)
+const spawnBullet = (character: Character) => {
+    const bullet = new Bullet(
+        character.position.x,
+        character.position.y,
+        character.rotation
+    )
     bullets.push(bullet)
 }
 
@@ -123,7 +127,7 @@ const update = () => {
 
     if (isPlayerShooting) {
         if (tNow - tPlayerShot > Config.bulletSpawnRate) {
-            spawnBullet(player.position.x, player.position.y)
+            spawnBullet(player)
             tPlayerShot = tNow
         }
     }
@@ -132,6 +136,9 @@ const update = () => {
         const bullet = bullets[n]
         bullet.position.x += bullet.speed.x * tDeltaF
         bullet.position.y += bullet.speed.y * tDeltaF
+        if (tNow > bullet.tDeath) {
+            // console.log("dead")
+        }
     }
 
     tPrev = tNow
