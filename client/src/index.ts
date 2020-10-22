@@ -1,4 +1,3 @@
-import Bullet from "./entities/Bullet"
 import Character from "./entities/Character"
 import Vector2 from "./math/Vector2"
 import * as BulletSystem from "./BulletSystem"
